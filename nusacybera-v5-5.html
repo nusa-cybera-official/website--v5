@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NUSACYBERA V5</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cyan: #00f5ff;
+  --orange: #ff6b00;
+  --dark: #020810;
+  --dark2: #050f1a;
+  --dark3: #0a1628;
+  --glass: rgba(0,245,255,0.05);
+  --glass2: rgba(0,245,255,0.1);
+  --border: rgba(0,245,255,0.2);
+  --text: #a0c4d8;
+  --white: #e0f4ff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--dark);color:var(--white);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* SCANLINE EFFECT */
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,0.015) 2px,rgba(0,245,255,0.015) 4px);pointer-events:none;z-index:9999;}
+
+/* BACKGROUND */
+.bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:linear-gradient(rgba(0,245,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;}
+
+/* NAVBAR */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(2,8,16,0.95);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(10px);}
+.nav-logo{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:var(--cyan);text-shadow:0 0 20px var(--cyan);letter-spacing:2px;}
+.nav-logo span{color:var(--orange);}
+.nav-user{display:flex;align-items:center;gap:10px;}
+.nav-badge{font-family:'Share Tech Mono',monospace;font-size:10px;background:var(--glass2);border:1px solid var(--border);padding:4px 10px;border-radius:4px;color:var(--cyan);}
+.nav-badge.owner{border-color:var(--orange);color:var(--orange);}
+.nav-badge.admin{border-color:#ff00ff;color:#ff00ff;}
+.nav-badge.moderator{border-color:#00ff88;color:#00ff88;}
+.btn-logout{background:transparent;border:1px solid rgba(255,100,0,0.4);color:var(--orange);padding:4px 12px;border-radius:4px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;transition:all .3s;}
+.btn-logout:hover{background:rgba(255,107,0,0.15);}
+
+/* MAIN CONTENT */
+.main{padding-top:60px;min-height:100vh;position:relative;z-index:1;}
+
+/* PAGES */
+.page{display:none;padding:20px;max-width:800px;margin:0 auto;animation:fadeIn .4s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* LOGIN PAGE */
+.login-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--dark2);border:1px solid var(--border);border-radius:12px;padding:40px 30px;width:100%;max-width:400px;position:relative;overflow:hidden;}
+.login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.login-title{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--cyan);text-align:center;margin-bottom:6px;text-shadow:0 0 20px var(--cyan);}
+.login-sub{text-align:center;color:var(--text);font-size:13px;margin-bottom:30px;font-family:'Share Tech Mono',monospace;}
+.tab-row{display:flex;gap:8px;margin-bottom:24px;}
+.tab-btn{flex:1;padding:10px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;border-radius:6px;cursor:pointer;transition:all .3s;letter-spacing:1px;}
+.tab-btn.active{background:var(--glass2);border-color:var(--cyan);color:var(--cyan);}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12px;color:var(--text);font-family:'Share Tech Mono',monospace;margin-bottom:6px;display:block;letter-spacing:1px;}
+.form-input{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:6px;padding:12px 14px;color:var(--white);font-family:'Rajdhani',sans-serif;font-size:15px;outline:none;transition:all .3s;}
+.form-input:focus{border-color:var(--cyan);box-shadow:0 0 10px rgba(0,245,255,0.15);}
+.btn-primary{width:100%;background:linear-gradient(135deg,rgba(0,245,255,0.15),rgba(0,245,255,0.05));border:1px solid var(--cyan);color:var(--cyan);padding:13px;border-radius:6px;font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:2px;transition:all .3s;margin-top:8px;}
+.btn-primary:hover{background:rgba(0,245,255,0.2);box-shadow:0 0 20px rgba(0,245,255,0.3);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+.alert{padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:16px;font-family:'Share Tech Mono',monospace;}
+.alert-error{background:rgba(255,50,50,0.1);border:1px solid rgba(255,50,50,0.3);color:#ff6666;}
+.alert-success{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(2,8,16,0.97);border-top:1px solid var(--border);display:flex;backdrop-filter:blur(10px);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer;transition:all .3s;border:none;background:transparent;color:var(--text);}
+.nav-item.active,.nav-item:hover{color:var(--cyan);}
+.nav-item.active .nav-dot{background:var(--cyan);box-shadow:0 0 8px var(--cyan);}
+.nav-icon{font-size:18px;margin-bottom:3px;}
+.nav-label{font-size:9px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:transparent;margin-top:3px;transition:all .3s;}
+
+/* SECTION HEADER */
+.sec-header{margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.sec-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--cyan);text-shadow:0 0 15px rgba(0,245,255,0.5);}
+.sec-sub{color:var(--text);font-size:12px;font-family:'Share Tech Mono',monospace;margin-top:4px;}
+
+/* CARDS */
+.card{background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:14px;transition:all .3s;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--cyan);}
+.card:hover{border-color:rgba(0,245,255,0.4);box-shadow:0 4px 20px rgba(0,245,255,0.08);}
+.card-title{font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;color:var(--white);margin-bottom:8px;}
+.card-meta{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text);margin-bottom:10px;}
+.card-body{font-size:14px;color:var(--text);line-height:1.6;}
+.card-badge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:4px;font-family:'Share Tech Mono',monospace;margin-right:6px;}
+.badge-owner{background:rgba(255,107,0,0.15);border:1px solid rgba(255,107,0,0.4);color:var(--orange);}
+.badge-admin{background:rgba(255,0,255,0.1);border:1px solid rgba(255,0,255,0.3);color:#ff00ff;}
+.badge-mod{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88;}
+.badge-member{background:var(--glass);border:1px solid var(--border);color:var(--text);}
+
+/* DASHBOARD */
+.dash-hero{background:linear-gradient(135deg,var(--dark3),var(--dark2));border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden;}
+.dash-hero::after{content:'NUSACYBERA';position:absolute;bottom:-10px;right:-10px;font-family:'Orbitron',sans-serif;font-size:60px;font-weight:900;color:rgba(0,245,255,0.03);pointer-events:none;}
+.dash-username{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;color:var(--cyan);text-shadow:0 0 20px var(--cyan);}
+.dash-role{margin-top:8px;}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.stat-box{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;}
+.stat-num{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;color:var(--cyan);}
+.stat-label{font-size:11px;color:var(--text);font-family:'Share Tech Mono',monospace;margin-top:4px;}
+
+/* FORM */
+.form-card{background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-textarea{width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--white);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;resize:vertical;min-height:80px;transition:all .3s;}
+.form-textarea:focus{border-color:var(--cyan);box-shadow:0 0 10px rgba(0,245,255,0.15);}
+.btn-submit{background:linear-gradient(135deg,rgba(0,245,255,0.15),rgba(0,245,255,0.05));border:1px solid var(--cyan);color:var(--cyan);padding:11px 24px;border-radius:6px;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:2px;transition:all .3s;}
+.btn-submit:hover{background:rgba(0,245,255,0.2);}
+.btn-danger{background:rgba(255,50,50,0.1);border:1px solid rgba(255,50,50,0.3);color:#ff6666;padding:6px 14px;border-radius:4px;font-size:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;transition:all .3s;}
+.btn-danger:hover{background:rgba(255,50,50,0.2);}
+
+/* ADMIN PANEL */
+.admin-section{background:rgba(255,107,0,0.05);border:1px solid rgba(255,107,0,0.2);border-radius:10px;padding:18px;margin-bottom:20px;}
+.admin-title{font-family:'Orbitron',sans-serif;font-size:13px;color:var(--orange);margin-bottom:14px;letter-spacing:2px;}
+
+/* MEMBER GRID */
+.member-grid{display:grid;gap:12px;}
+.member-card{background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;transition:all .3s;}
+.member-card:hover{border-color:rgba(0,245,255,0.3);}
+.member-avatar{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--dark3),var(--dark2));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:16px;color:var(--cyan);flex-shrink:0;}
+.member-info{flex:1;}
+.member-name{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:var(--white);}
+.member-detail{font-size:12px;color:var(--text);margin-top:3px;}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--text);font-family:'Share Tech Mono',monospace;}
+.loading::after{content:'';display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite;margin-left:10px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.empty{text-align:center;padding:40px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;}
+
+/* TOAST */
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--dark3);border:1px solid var(--cyan);color:var(--cyan);padding:10px 20px;border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:12px;z-index:9998;opacity:0;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+.page-content{padding-bottom:80px;}
+
+/* SELECT */
+select.form-input{cursor:pointer;}
+select.form-input option{background:var(--dark2);}
+
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+
+.online-dot{width:8px;height:8px;background:#00ff88;border-radius:50%;display:inline-block;margin-right:6px;box-shadow:0 0 6px #00ff88;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div id="toast" class="toast"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar" style="display:none;">
+  <div class="nav-logo">NUSA<span>CYBERA</span></div>
+  <div class="nav-user">
+    <span class="nav-badge" id="navBadge"></span>
+    <button class="btn-logout" onclick="logout()">KELUAR</button>
+  </div>
+</nav>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-wrap">
+  <div class="login-box">
+    <div class="login-title">NUSACYBERA</div>
+    <div class="login-sub">// DIGITAL COMMUNITY PLATFORM v5.0</div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">LOGIN</button>
+      <button class="tab-btn" onclick="switchTab('register')">REGISTER</button>
+    </div>
+    <div id="loginAlert"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="form-group">
+        <label class="form-label">USERNAME</label>
+        <input type="text" class="form-input" id="loginUser" placeholder="masukkan username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD</label>
+        <input type="password" class="form-input" id="loginPass" placeholder="masukkan password">
+      </div>
+      <button class="btn-primary" onclick="doLogin()" id="btnLogin">MASUK</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">USERNAME</label>
+        <input type="text" class="form-input" id="regUser" placeholder="buat username">
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD</label>
+        <input type="password" class="form-input" id="regPass" placeholder="buat password">
+      </div>
+      <button class="btn-primary" onclick="doRegister()" id="btnReg">DAFTAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="main" id="mainApp" style="display:none;">
+
+  <!-- DASHBOARD -->
+  <div class="page active page-content" id="pageDash">
+    <div class="dash-hero">
+      <div style="font-size:11px;color:var(--text);font-family:'Share Tech Mono',monospace;margin-bottom:8px;"><span class="online-dot"></span>ONLINE</div>
+      <div class="dash-username" id="dashUsername"></div>
+      <div class="dash-role" id="dashRole"></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" id="statMembers">-</div><div class="stat-label">MEMBER</div></div>
+      <div class="stat-box"><div class="stat-num" id="statPosts">-</div><div class="stat-label">POST</div></div>
+      <div class="stat-box"><div class="stat-num" id="statAnnounce">-</div><div class="stat-label">INFO</div></div>
+    </div>
+    <!-- ADMIN PANEL -->
+    <div id="adminPanel" style="display:none;">
+      <div class="admin-section">
+        <div class="admin-title">⚡ ADMIN PANEL — KELOLA MEMBER</div>
+        <div id="adminMemberList"><div class="loading">memuat</div></div>
+      </div>
+    </div>
+    <!-- PENGUMUMAN TERBARU -->
+    <div class="sec-header"><div class="sec-title">PENGUMUMAN</div><div class="sec-sub">// informasi terbaru komunitas</div></div>
+    <div id="dashAnnounce"><div class="loading">memuat</div></div>
+  </div>
+
+  <!-- BIODATA -->
+  <div class="page page-content" id="pageBio">
+    <div class="sec-header"><div class="sec-title">BIODATA SAYA</div><div class="sec-sub">// profil member komunitas</div></div>
+    <!-- VIEW MODE -->
+    <div id="bioView" style="display:none;">
+      <div class="card" style="margin-bottom:16px;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="width:60px;height:60px;border-radius:12px;background:var(--dark3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:24px;color:var(--cyan);margin:0 auto 10px;" id="bioAvatar"></div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--white);" id="bioViewName"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div style="background:var(--dark3);padding:10px;border-radius:8px;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--text);font-family:'Share Tech Mono',monospace;margin-bottom:4px;">USIA</div>
+            <div style="font-size:15px;color:var(--white);" id="bioViewAge">-</div>
+          </div>
+          <div style="background:var(--dark3);padding:10px;border-radius:8px;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--text);font-family:'Share Tech Mono',monospace;margin-bottom:4px;">KOTA</div>
+            <div style="font-size:15px;color:var(--white);" id="bioViewCity">-</div>
+          </div>
+        </div>
+        <div style="background:var(--dark3);padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:10px;">
+          <div style="font-size:10px;color:var(--text);font-family:'Share Tech Mono',monospace;margin-bottom:6px;">BIO</div>
+          <div style="font-size:14px;color:var(--text);line-height:1.6;" id="bioViewBio">-</div>
+        </div>
+        <div style="background:var(--dark3);padding:10px;border-radius:8px;border:1px solid var(--border);">
+          <div style="font-size:10px;color:var(--text);font-family:'Share Tech Mono',monospace;margin-bottom:4px;">SOCIAL</div>
+          <div style="font-size:13px;color:var(--cyan);" id="bioViewSocial">-</div>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="editBiodata()" style="width:100%;">EDIT BIODATA</button>
+    </div>
+    <!-- EDIT MODE -->
+    <div id="bioForm">
+      <div class="form-card">
+        <div class="form-group">
+          <label class="form-label">NAMA LENGKAP</label>
+          <input type="text" class="form-input" id="bioName" placeholder="nama lengkap">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">USIA</label>
+            <input type="number" class="form-input" id="bioAge" placeholder="umur">
+          </div>
+          <div class="form-group">
+            <label class="form-label">KOTA</label>
+            <input type="text" class="form-input" id="bioCity" placeholder="kota asal">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">BIO / DESKRIPSI</label>
+          <textarea class="form-textarea" id="bioBio" placeholder="ceritakan tentang dirimu..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">SOCIAL LINK</label>
+          <input type="text" class="form-input" id="bioSocial" placeholder="link instagram / sosmed">
+        </div>
+        <button class="btn-submit" onclick="saveBiodata()">SIMPAN BIODATA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORUM -->
+  <div class="page page-content" id="pageForum">
+    <div class="sec-header"><div class="sec-title">FORUM DISKUSI</div><div class="sec-sub">// ruang diskusi komunitas</div></div>
+    <div class="form-card">
+      <div class="form-group">
+        <label class="form-label">JUDUL POST</label>
+        <input type="text" class="form-input" id="forumTitle" placeholder="judul diskusi...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ISI POST</label>
+        <textarea class="form-textarea" id="forumContent" placeholder="tulis diskusimu..." style="min-height:100px;"></textarea>
+      </div>
+      <button class="btn-submit" onclick="submitPost()">KIRIM POST</button>
+    </div>
+    <div id="forumList"><div class="loading">memuat</div></div>
+  </div>
+
+  <!-- MEMBER -->
+  <div class="page page-content" id="pageMember">
+    <div class="sec-header"><div class="sec-title">DIREKTORI MEMBER</div><div class="sec-sub">// daftar anggota komunitas</div></div>
+    <div class="member-grid" id="memberList"><div class="loading">memuat</div></div>
+  </div>
+
+  <!-- PENGUMUMAN -->
+  <div class="page page-content" id="pageAnnounce">
+    <div class="sec-header"><div class="sec-title">PENGUMUMAN</div><div class="sec-sub">// informasi & berita komunitas</div></div>
+    <div id="announceForm" style="display:none;">
+      <div class="form-card">
+        <div class="admin-title" style="margin-bottom:12px;">⚡ BUAT PENGUMUMAN BARU</div>
+        <div class="form-group">
+          <label class="form-label">JUDUL</label>
+          <input type="text" class="form-input" id="annTitle" placeholder="judul pengumuman">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ISI PENGUMUMAN</label>
+          <textarea class="form-textarea" id="annContent" placeholder="isi pengumuman..." style="min-height:100px;"></textarea>
+        </div>
+        <button class="btn-submit" onclick="submitAnnounce()">POSTING</button>
+      </div>
+    </div>
+    <div id="announceList"><div class="loading">memuat</div></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="nav-item active" onclick="goPage('dash',this)">
+    <div class="nav-icon">⌂</div>
+    <div class="nav-label">BERANDA</div>
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" onclick="goPage('bio',this)">
+    <div class="nav-icon">◈</div>
+    <div class="nav-label">BIODATA</div>
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" onclick="goPage('forum',this)">
+    <div class="nav-icon">◎</div>
+    <div class="nav-label">FORUM</div>
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" onclick="goPage('member',this)">
+    <div class="nav-icon">◉</div>
+    <div class="nav-label">MEMBER</div>
+    <div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" onclick="goPage('announce',this)">
+    <div class="nav-icon">◆</div>
+    <div class="nav-label">INFO</div>
+    <div class="nav-dot"></div>
+  </button>
+</nav>
+
+<script>
+const SUPA_URL = 'https://nqeqwopwspvjuikgdhbf.supabase.co';
+const SUPA_KEY = 'sb_publishable_-uwUFZM07iaKQ54l0jEzWg_9nnIP5NI';
+
+let currentUser = null;
+
+const headers = {
+  'apikey': SUPA_KEY,
+  'Authorization': `Bearer ${SUPA_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+// TABLE NAMES (sesuai database)
+const T = {
+  users: 'users',
+  biodata: 'biodata',
+  forum: 'forum_posts',
+  announce: 'announcements'
+};
+
+// SUPABASE HELPER
+async function sb(path, method='GET', body=null) {
+  const opts = { method, headers };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  if(r.status === 204) return [];
+  return await r.json();
+}
+
+// TOAST
+function toast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? '#ff6666' : 'var(--cyan)';
+  t.style.color = isError ? '#ff6666' : 'var(--cyan)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// TAB SWITCH
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+  document.getElementById('loginAlert').innerHTML = '';
+}
+
+function showAlert(msg, type='error') {
+  document.getElementById('loginAlert').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+// LOGIN
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if(!u||!p) return showAlert('Username dan password wajib diisi');
+  document.getElementById('btnLogin').disabled = true;
+  document.getElementById('btnLogin').textContent = 'MEMPROSES...';
+  try {
+    const res = await sb(`${T.users}?username=eq.${encodeURIComponent(u)}&password=eq.${encodeURIComponent(p)}&select=*`);
+    if(!res || res.length === 0) { showAlert('Username atau password salah'); }
+    else { currentUser = res[0]; startApp(); }
+  } catch(e) { showAlert('Koneksi gagal, coba lagi'); }
+  document.getElementById('btnLogin').disabled = false;
+  document.getElementById('btnLogin').textContent = 'MASUK';
+}
+
+// REGISTER
+async function doRegister() {
+  const u = document.getElementById('regUser').value.trim();
+  const p = document.getElementById('regPass').value.trim();
+  if(!u||!p) return showAlert('Username dan password wajib diisi');
+  if(u.length < 3) return showAlert('Username minimal 3 karakter');
+  if(p.length < 6) return showAlert('Password minimal 6 karakter');
+  document.getElementById('btnReg').disabled = true;
+  document.getElementById('btnReg').textContent = 'MEMPROSES...';
+  try {
+    const check = await sb(`${T.users}?username=eq.${encodeURIComponent(u)}&select=id`);
+    if(check && check.length > 0) { showAlert('Username sudah dipakai'); }
+    else {
+      const res = await sb(T.users, 'POST', { username: u, password: p, role: 'member' });
+      if(res && res.length > 0) { showAlert('Registrasi berhasil! Silakan login.', 'success'); switchTab('login'); }
+      else showAlert('Gagal mendaftar, coba lagi');
+    }
+  } catch(e) { showAlert('Koneksi gagal, coba lagi'); }
+  document.getElementById('btnReg').disabled = false;
+  document.getElementById('btnReg').textContent = 'DAFTAR';
+}
+
+// START APP
+function startApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('navbar').style.display = 'flex';
+  document.getElementById('bottomNav').style.display = 'flex';
+  const badge = document.getElementById('navBadge');
+  badge.textContent = currentUser.role.toUpperCase();
+  badge.className = 'nav-badge ' + (currentUser.role==='owner'?'owner':currentUser.role==='admin'?'admin':currentUser.role==='moderator'?'moderator':'');
+  document.getElementById('dashUsername').textContent = currentUser.username;
+  const roleBadge = `<span class="card-badge badge-${currentUser.role==='owner'?'owner':currentUser.role==='admin'?'admin':currentUser.role==='moderator'?'mod':'member'}">${currentUser.role.toUpperCase()}</span>`;
+  document.getElementById('dashRole').innerHTML = roleBadge;
+  // show admin panel if owner/admin/moderator
+  if(['owner','admin','moderator'].includes(currentUser.role)) {
+    document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('announceForm').style.display = 'block';
+    loadAdminMembers();
+  } else {
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('announceForm').style.display = 'none';
+  }
+  loadDashboard();
+  loadBiodata();
+  loadForum();
+  loadMembers();
+  loadAnnouncements();
+}
+
+// LOGOUT
+function logout() {
+  currentUser = null;
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('navbar').style.display = 'none';
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  goPage('dash', document.querySelector('.nav-item'));
+}
+
+// PAGE NAVIGATION
+function goPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  try {
+    const [members, posts, announce] = await Promise.all([
+      sb('users?select=id'),
+      sb('forum_posts?select=id'),
+      sb('announcements?select=id')
+    ]);
+    document.getElementById('statMembers').textContent = members.length||0;
+    document.getElementById('statPosts').textContent = posts.length||0;
+    document.getElementById('statAnnounce').textContent = announce.length||0;
+    // load 2 latest announcements
+    const ann = await sb('announcements?order=created_at.desc&limit=2&select=*');
+    const el = document.getElementById('dashAnnounce');
+    if(!ann||ann.length===0){el.innerHTML='<div class="empty">// belum ada pengumuman</div>';return;}
+    el.innerHTML = ann.map(a=>`
+      <div class="card">
+        <div class="card-title">${esc(a.title)}</div>
+        <div class="card-meta">${formatDate(a.created_at)}</div>
+        <div class="card-body">${esc(a.content)}</div>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+// BIODATA
+async function loadBiodata() {
+  try {
+    const res = await sb(`biodata?user_id=eq.${currentUser.id}&select=*`);
+    if(res && res.length > 0) {
+      const b = res[0];
+      // Show view mode
+      document.getElementById('bioView').style.display = 'block';
+      document.getElementById('bioForm').style.display = 'none';
+      document.getElementById('bioAvatar').textContent = currentUser.username.charAt(0).toUpperCase();
+      document.getElementById('bioViewName').textContent = b.full_name||currentUser.username;
+      document.getElementById('bioViewAge').textContent = b.age ? b.age+' tahun' : '-';
+      document.getElementById('bioViewCity').textContent = b.city||'-';
+      document.getElementById('bioViewBio').textContent = b.bio||'-';
+      document.getElementById('bioViewSocial').textContent = b.social_link||'-';
+      // Also fill form for editing
+      document.getElementById('bioName').value = b.full_name||'';
+      document.getElementById('bioAge').value = b.age||'';
+      document.getElementById('bioCity').value = b.city||'';
+      document.getElementById('bioBio').value = b.bio||'';
+      document.getElementById('bioSocial').value = b.social_link||'';
+    } else {
+      document.getElementById('bioView').style.display = 'none';
+      document.getElementById('bioForm').style.display = 'block';
+    }
+  } catch(e) {}
+}
+
+function editBiodata() {
+  document.getElementById('bioView').style.display = 'none';
+  document.getElementById('bioForm').style.display = 'block';
+}
+
+async function saveBiodata() {
+  const data = {
+    user_id: currentUser.id,
+    full_name: document.getElementById('bioName').value.trim(),
+    age: parseInt(document.getElementById('bioAge').value)||null,
+    city: document.getElementById('bioCity').value.trim(),
+    bio: document.getElementById('bioBio').value.trim(),
+    social_link: document.getElementById('bioSocial').value.trim(),
+    updated_at: new Date().toISOString()
+  };
+  if(!data.full_name) return toast('Nama lengkap wajib diisi', true);
+  try {
+    const check = await sb(`biodata?user_id=eq.${currentUser.id}&select=id`);
+    if(check && check.length > 0) {
+      await fetch(`${SUPA_URL}/rest/v1/biodata?user_id=eq.${currentUser.id}`, {method:'PATCH',headers,body:JSON.stringify(data)});
+    } else {
+      await sb('biodata','POST',data);
+    }
+    toast('Biodata berhasil disimpan!');
+    loadBiodata();
+    loadMembers();
+  } catch(e) { toast('Gagal menyimpan biodata', true); }
+}
+
+// FORUM
+async function loadForum() {
+  const el = document.getElementById('forumList');
+  try {
+    const posts = await sb('forum_posts?order=created_at.desc&select=*');
+    if(!posts||posts.length===0){el.innerHTML='<div class="empty">// belum ada post</div>';return;}
+    // get usernames
+    const uids = [...new Set(posts.map(p=>p.user_id))];
+    const users = await sb(`users?id=in.(${uids.join(',')})&select=id,username,role`);
+    const umap = {};
+    users.forEach(u=>umap[u.id]=u);
+    el.innerHTML = posts.map(p=>{
+      const u = umap[p.user_id]||{username:'Unknown',role:'member'};
+      const canDel = currentUser.role==='owner'||currentUser.role==='admin'||p.user_id===currentUser.id;
+      return `<div class="card">
+        <div class="card-title">${esc(p.title)}</div>
+        <div class="card-meta">
+          <span class="card-badge badge-${u.role==='owner'?'owner':u.role==='admin'?'admin':u.role==='moderator'?'mod':'member'}">${u.role.toUpperCase()}</span>
+          ${esc(u.username)} · ${formatDate(p.created_at)}
+          ${canDel?`<button class="btn-danger" style="float:right;margin-top:-2px;" onclick="deletePost('${p.id}')">HAPUS</button>`:''}
+        </div>
+        <div class="card-body">${esc(p.content)}</div>
+      </div>`;
+    }).join('');
+  } catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}
+}
+
+async function submitPost() {
+  const title = document.getElementById('forumTitle').value.trim();
+  const content = document.getElementById('forumContent').value.trim();
+  if(!title||!content) return toast('Judul dan isi wajib diisi', true);
+  try {
+    await sb('forum_posts','POST',{user_id:currentUser.id,title,content});
+    document.getElementById('forumTitle').value='';
+    document.getElementById('forumContent').value='';
+    toast('Post berhasil dikirim!');
+    loadForum();
+    loadDashboard();
+  } catch(e){toast('Gagal mengirim post',true);}
+}
+
+async function deletePost(id) {
+  if(!confirm('Hapus post ini?')) return;
+  await fetch(`${SUPA_URL}/rest/v1/forum_posts?id=eq.${id}`,{method:'DELETE',headers});
+  toast('Post dihapus');
+  loadForum();
+  loadDashboard();
+}
+
+// MEMBER LIST
+async function loadMembers() {
+  const el = document.getElementById('memberList');
+  try {
+    const users = await sb('users?select=id,username,role,created_at&order=created_at.asc');
+    const bios = await sb('biodata?select=user_id,full_name,city');
+    const bmap = {};
+    bios.forEach(b=>bmap[b.user_id]=b);
+    if(!users||users.length===0){el.innerHTML='<div class="empty">// belum ada member</div>';return;}
+    el.innerHTML = users.map(u=>{
+      const b = bmap[u.id]||{};
+      return `<div class="member-card">
+        <div class="member-avatar">${u.username.charAt(0).toUpperCase()}</div>
+        <div class="member-info">
+          <div class="member-name">${esc(u.username)}</div>
+          <div class="member-detail">
+            <span class="card-badge badge-${u.role==='owner'?'owner':u.role==='admin'?'admin':u.role==='moderator'?'mod':'member'}">${u.role.toUpperCase()}</span>
+            ${b.city?esc(b.city):''}${b.full_name?' · '+esc(b.full_name):''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}
+}
+
+// ANNOUNCEMENTS
+async function loadAnnouncements() {
+  const el = document.getElementById('announceList');
+  try {
+    const ann = await sb('announcements?order=created_at.desc&select=*');
+    if(!ann||ann.length===0){el.innerHTML='<div class="empty">// belum ada pengumuman</div>';return;}
+    el.innerHTML = ann.map(a=>{
+      const canDel = ['owner','admin'].includes(currentUser.role);
+      return `<div class="card">
+        <div class="card-title">${esc(a.title)}</div>
+        <div class="card-meta">${formatDate(a.created_at)}${canDel?`<button class="btn-danger" style="float:right;" onclick="deleteAnnounce('${a.id}')">HAPUS</button>`:''}</div>
+        <div class="card-body">${esc(a.content)}</div>
+      </div>`;
+    }).join('');
+  } catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}
+}
+
+async function submitAnnounce() {
+  const title = document.getElementById('annTitle').value.trim();
+  const content = document.getElementById('annContent').value.trim();
+  if(!title||!content) return toast('Judul dan isi wajib diisi', true);
+  try {
+    await sb('announcements','POST',{title,content,created_by:currentUser.id});
+    document.getElementById('annTitle').value='';
+    document.getElementById('annContent').value='';
+    toast('Pengumuman berhasil diposting!');
+    loadAnnouncements();
+    loadDashboard();
+  } catch(e){toast('Gagal posting pengumuman',true);}
+}
+
+async function deleteAnnounce(id) {
+  if(!confirm('Hapus pengumuman ini?')) return;
+  await fetch(`${SUPA_URL}/rest/v1/announcements?id=eq.${id}`,{method:'DELETE',headers});
+  toast('Pengumuman dihapus');
+  loadAnnouncements();
+  loadDashboard();
+}
+
+// ADMIN - KELOLA MEMBER
+async function loadAdminMembers() {
+  const el = document.getElementById('adminMemberList');
+  try {
+    const users = await sb('users?select=id,username,role&order=created_at.asc');
+    el.innerHTML = users.map(u=>`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--dark3);border-radius:8px;border:1px solid var(--border);">
+        <span style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--white);flex:1;">${esc(u.username)}</span>
+        ${['owner','admin','moderator'].includes(currentUser.role)&&u.id!==currentUser.id?`
+        ${currentUser.role==='owner'?`<select onchange="changeRole('${u.id}',this.value)" style="background:var(--dark2);border:1px solid var(--border);color:var(--cyan);padding:5px 8px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:11px;">
+          <option ${u.role==='member'?'selected':''} value="member">MEMBER</option>
+          <option ${u.role==='moderator'?'selected':''} value="moderator">MODERATOR</option>
+          <option ${u.role==='admin'?'selected':''} value="admin">ADMIN</option>
+        </select>`:''}
+        ${(currentUser.role==='owner'||(currentUser.role==='admin'&&u.role==='member')||(currentUser.role==='moderator'&&u.role==='member'))?`<button class="btn-danger" onclick="deleteUser('${u.id}','${u.username}')">KICK</button>`:''}`:`<span class="card-badge badge-${u.role==='owner'?'owner':u.role==='admin'?'admin':'mod'}">${u.role.toUpperCase()}</span>`}
+      </div>`).join('');
+  } catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}
+}
+
+async function changeRole(uid, role) {
+  await fetch(`${SUPA_URL}/rest/v1/users?id=eq.${uid}`,{method:'PATCH',headers,body:JSON.stringify({role})});
+  toast('Role berhasil diubah!');
+  loadMembers();
+}
+
+async function deleteUser(uid, uname) {
+  if(!confirm(`Kick member "${uname}"?`)) return;
+  await fetch(`${SUPA_URL}/rest/v1/users?id=eq.${uid}`,{method:'DELETE',headers});
+  toast(`${uname} telah di-kick`);
+  loadAdminMembers();
+  loadMembers();
+  loadDashboard();
+}
+
+// UTILS
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function formatDate(d){if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});}
+
+// ENTER KEY
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter') {
+    const lf = document.getElementById('loginForm');
+    const rf = document.getElementById('registerForm');
+    if(lf.style.display!=='none') doLogin();
+    else if(rf.style.display!=='none') doRegister();
+  }
+});
+</script>
+</body>
+</html>
