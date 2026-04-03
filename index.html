@@ -149,6 +149,11 @@ select.form-input option{background:var(--dark2);}
 .online-dot{width:8px;height:8px;background:#00ff88;border-radius:50%;display:inline-block;margin-right:6px;box-shadow:0 0 6px #00ff88;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
+.nav-badge.ceowner{border-color:#ff69b4;color:#ff69b4;}
+.badge-ceowner{background:rgba(255,105,180,0.15);border:1px solid rgba(255,105,180,0.4);color:#ff69b4;}
+.nav-badge.percobaan{border-color:#ffff00;color:#ffff00;}
+.badge-percobaan{background:rgba(255,255,0,0.1);border:1px solid rgba(255,255,0,0.3);color:#ffff00;}
+
 /* MEDIA POST */
 .media-preview{width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-top:10px;border:1px solid var(--border);display:block;}
 .media-preview-video{width:100%;border-radius:8px;margin-top:10px;border:1px solid var(--border);}
@@ -210,6 +215,18 @@ select.form-input option{background:var(--dark2);}
       <div class="form-group">
         <label class="form-label">PASSWORD</label>
         <input type="password" class="form-input" id="regPass" placeholder="buat password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">FOTO WAJAH (verifikasi)</label>
+        <div class="upload-area" id="faceUploadArea" style="padding:14px;">
+          <input type="file" id="facePhoto" accept="image/*" capture="user" onchange="previewFace(this)">
+          <div class="upload-icon">📷</div>
+          <div class="upload-label">Tap untuk foto / upload foto wajah</div>
+        </div>
+        <div id="facePreviewWrap" style="display:none;position:relative;margin-top:8px;">
+          <img id="facePreviewImg" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+          <button class="remove-media" onclick="removeFace()">✕ HAPUS</button>
+        </div>
       </div>
       <button class="btn-primary" onclick="doRegister()" id="btnReg">DAFTAR</button>
     </div>
@@ -397,37 +414,224 @@ select.form-input option{background:var(--dark2);}
 <script>
 const SUPA_URL = 'https://nqeqwopwspvjuikgdhbf.supabase.co';
 const SUPA_KEY = 'sb_publishable_-uwUFZM07iaKQ54l0jEzWg_9nnIP5NI';
+
 let currentUser = null;
-const headers = {'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'};
-const T = {users:'users',biodata:'biodata',forum:'forum_posts',announce:'announcements'};
-async function sb(path,method='GET',body=null){const opts={method,headers};if(body)opts.body=JSON.stringify(body);const r=await fetch(`${SUPA_URL}/rest/v1/${path}`,opts);if(r.status===204)return[];return await r.json();}
-function toast(msg,isError=false){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=isError?'#ff6666':'var(--cyan)';t.style.color=isError?'#ff6666':'var(--cyan)';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
-function switchTab(tab){document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));document.getElementById('loginForm').style.display=tab==='login'?'block':'none';document.getElementById('registerForm').style.display=tab==='register'?'block':'none';document.getElementById('loginAlert').innerHTML='';}
-function showAlert(msg,type='error'){document.getElementById('loginAlert').innerHTML=`<div class="alert alert-${type}">${msg}</div>`;}
-async function doLogin(){const u=document.getElementById('loginUser').value.trim();const p=document.getElementById('loginPass').value.trim();if(!u||!p)return showAlert('Username dan password wajib diisi');document.getElementById('btnLogin').disabled=true;document.getElementById('btnLogin').textContent='MEMPROSES...';try{const res=await sb(`${T.users}?username=eq.${encodeURIComponent(u)}&password=eq.${encodeURIComponent(p)}&select=*`);if(!res||res.length===0){showAlert('Username atau password salah');}else{currentUser=res[0];startApp();}}catch(e){showAlert('Koneksi gagal, coba lagi');}document.getElementById('btnLogin').disabled=false;document.getElementById('btnLogin').textContent='MASUK';}
-async function doRegister(){const u=document.getElementById('regUser').value.trim();const p=document.getElementById('regPass').value.trim();if(!u||!p)return showAlert('Username dan password wajib diisi');if(u.length<3)return showAlert('Username minimal 3 karakter');if(p.length<6)return showAlert('Password minimal 6 karakter');document.getElementById('btnReg').disabled=true;document.getElementById('btnReg').textContent='MEMPROSES...';try{const check=await sb(`${T.users}?username=eq.${encodeURIComponent(u)}&select=id`);if(check&&check.length>0){showAlert('Username sudah dipakai');}else{const res=await sb(T.users,'POST',{username:u,password:p,role:'member'});if(res&&res.length>0){showAlert('Registrasi berhasil! Silakan login.','success');switchTab('login');}else showAlert('Gagal mendaftar, coba lagi');}}catch(e){showAlert('Koneksi gagal, coba lagi');}document.getElementById('btnReg').disabled=false;document.getElementById('btnReg').textContent='DAFTAR';}
-function startApp(){document.getElementById('loginPage').style.display='none';document.getElementById('mainApp').style.display='block';document.getElementById('navbar').style.display='flex';document.getElementById('bottomNav').style.display='flex';const badge=document.getElementById('navBadge');badge.textContent=currentUser.role.toUpperCase();badge.className='nav-badge '+(currentUser.role==='owner'?'owner':currentUser.role==='admin'?'admin':currentUser.role==='moderator'?'moderator':'');document.getElementById('dashUsername').textContent=currentUser.username;const roleBadge=`<span class="card-badge badge-${currentUser.role==='owner'?'owner':currentUser.role==='admin'?'admin':currentUser.role==='moderator'?'mod':'member'}">${currentUser.role.toUpperCase()}</span>`;document.getElementById('dashRole').innerHTML=roleBadge;if(['owner','admin','moderator'].includes(currentUser.role)){document.getElementById('adminPanel').style.display='block';document.getElementById('announceForm').style.display='block';loadAdminMembers();}else{document.getElementById('adminPanel').style.display='none';document.getElementById('announceForm').style.display='none';}loadDashboard();loadBiodata();loadForum();loadMembers();loadAnnouncements();}
-function logout(){currentUser=null;document.getElementById('loginPage').style.display='flex';document.getElementById('mainApp').style.display='none';document.getElementById('navbar').style.display='none';document.getElementById('bottomNav').style.display='none';document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';goPage('dash',document.querySelector('.nav-item'));}
-function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
-async function loadDashboard(){try{const[members,posts,announce]=await Promise.all([sb('users?select=id'),sb('forum_posts?select=id'),sb('announcements?select=id')]);document.getElementById('statMembers').textContent=members.length||0;document.getElementById('statPosts').textContent=posts.length||0;document.getElementById('statAnnounce').textContent=announce.length||0;const ann=await sb('announcements?order=created_at.desc&limit=2&select=*');const el=document.getElementById('dashAnnounce');if(!ann||ann.length===0){el.innerHTML='<div class="empty">// belum ada pengumuman</div>';return;}el.innerHTML=ann.map(a=>`<div class="card"><div class="card-title">${esc(a.title)}</div><div class="card-meta">${formatDate(a.created_at)}</div><div class="card-body">${esc(a.content)}</div></div>`).join('');}catch(e){console.error(e);}}
+
+const headers = {
+  'apikey': SUPA_KEY,
+  'Authorization': `Bearer ${SUPA_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+// TABLE NAMES (sesuai database)
+const T = {
+  users: 'users',
+  biodata: 'biodata',
+  forum: 'forum_posts',
+  announce: 'announcements'
+};
+
+// SUPABASE HELPER
+async function sb(path, method='GET', body=null) {
+  const opts = { method, headers };
+  if(body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, opts);
+  if(r.status === 204) return [];
+  return await r.json();
+}
+
+// TOAST
+function toast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? '#ff6666' : 'var(--cyan)';
+  t.style.color = isError ? '#ff6666' : 'var(--cyan)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// TAB SWITCH
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+  document.getElementById('loginAlert').innerHTML = '';
+}
+
+function showAlert(msg, type='error') {
+  document.getElementById('loginAlert').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+// LOGIN
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if(!u||!p) return showAlert('Username dan password wajib diisi');
+  document.getElementById('btnLogin').disabled = true;
+  document.getElementById('btnLogin').textContent = 'MEMPROSES...';
+  try {
+    const res = await sb(`${T.users}?username=eq.${encodeURIComponent(u)}&password=eq.${encodeURIComponent(p)}&select=*`);
+    if(!res || res.length === 0) { showAlert('Username atau password salah'); }
+    else { currentUser = res[0]; startApp(); }
+  } catch(e) { showAlert('Koneksi gagal, coba lagi'); }
+  document.getElementById('btnLogin').disabled = false;
+  document.getElementById('btnLogin').textContent = 'MASUK';
+}
+
+// FACE PHOTO PREVIEW
+function previewFace(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('facePreviewImg').src = url;
+  document.getElementById('facePreviewWrap').style.display = 'block';
+  document.getElementById('faceUploadArea').style.display = 'none';
+}
+function removeFace() {
+  document.getElementById('facePhoto').value = '';
+  document.getElementById('facePreviewWrap').style.display = 'none';
+  document.getElementById('faceUploadArea').style.display = 'block';
+}
+
+// REGISTER
+async function doRegister() {
+  const u = document.getElementById('regUser').value.trim();
+  const p = document.getElementById('regPass').value.trim();
+  if(!u||!p) return showAlert('Username dan password wajib diisi');
+  if(u.length < 3) return showAlert('Username minimal 3 karakter');
+  if(p.length < 6) return showAlert('Password minimal 6 karakter');
+  document.getElementById('btnReg').disabled = true;
+  document.getElementById('btnReg').textContent = 'MEMPROSES...';
+  try {
+    const check = await sb(`${T.users}?username=eq.${encodeURIComponent(u)}&select=id`);
+    if(check && check.length > 0) { showAlert('Username sudah dipakai'); }
+    else {
+      // Upload face photo if provided
+      let face_photo = null;
+      const faceFile = document.getElementById('facePhoto').files[0];
+      if(faceFile) {
+        const ext = faceFile.name.split('.').pop();
+        const fname = `face_${Date.now()}.${ext}`;
+        const r = await fetch(`${SUPA_URL}/storage/v1/object/media/${fname}`, {
+          method: 'POST',
+          headers: {'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':faceFile.type},
+          body: faceFile
+        });
+        if(r.ok) face_photo = `${SUPA_URL}/storage/v1/object/public/media/${fname}`;
+      }
+      const res = await sb(T.users, 'POST', { username: u, password: p, role: 'member', face_photo });
+      if(res && res.length > 0) { showAlert('Registrasi berhasil! Silakan login.', 'success'); switchTab('login'); }
+      else showAlert('Gagal mendaftar, coba lagi');
+    }
+  } catch(e) { showAlert('Koneksi gagal, coba lagi'); }
+  document.getElementById('btnReg').disabled = false;
+  document.getElementById('btnReg').textContent = 'DAFTAR';
+}
+
+// START APP
+function startApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('navbar').style.display = 'flex';
+  document.getElementById('bottomNav').style.display = 'flex';
+  const badge = document.getElementById('navBadge');
+  badge.textContent = currentUser.role.toUpperCase();
+  badge.className = 'nav-badge ' + (currentUser.role==='owner'?'owner':currentUser.role==='ce-owner'?'ceowner':currentUser.role==='admin'?'admin':currentUser.role==='moderator'?'moderator':currentUser.role==='percobaan'?'percobaan':'');
+  document.getElementById('dashUsername').textContent = currentUser.username;
+  const roleBadge = `<span class="card-badge badge-${currentUser.role==='owner'?'owner':currentUser.role==='ce-owner'?'ceowner':currentUser.role==='admin'?'admin':currentUser.role==='moderator'?'mod':currentUser.role==='percobaan'?'percobaan':'member'}">${currentUser.role.toUpperCase()}</span>`;
+  document.getElementById('dashRole').innerHTML = roleBadge;
+  // show admin panel if owner/admin/moderator
+  if(['owner','ce-owner','admin','moderator'].includes(currentUser.role)) {
+    document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('announceForm').style.display = 'block';
+    loadAdminMembers();
+  } else {
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('announceForm').style.display = 'none';
+  }
+  loadDashboard();
+  loadBiodata();
+  loadForum();
+  loadMembers();
+  loadAnnouncements();
+  // Refresh role dari database
+  refreshCurrentRole();
+}
+
+async function refreshCurrentRole() {
+  try {
+    const res = await sb(`users?id=eq.${currentUser.id}&select=role`);
+    if(res && res.length > 0 && res[0].role !== currentUser.role) {
+      currentUser.role = res[0].role;
+      const role = currentUser.role;
+      const badge = document.getElementById('navBadge');
+      badge.textContent = role.toUpperCase();
+      badge.className = 'nav-badge '+(role==='owner'?'owner':role==='ce-owner'?'ceowner':role==='admin'?'admin':role==='moderator'?'moderator':role==='percobaan'?'percobaan':'');
+      document.getElementById('dashRole').innerHTML = `<span class="card-badge badge-${role==='owner'?'owner':role==='ce-owner'?'ceowner':role==='admin'?'admin':role==='moderator'?'mod':role==='percobaan'?'percobaan':'member'}">${role.toUpperCase()}</span>`;
+    }
+  } catch(e) {}
+}
+
+// LOGOUT
+function logout() {
+  currentUser = null;
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('navbar').style.display = 'none';
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  goPage('dash', document.querySelector('.nav-item'));
+}
+
+// PAGE NAVIGATION
+function goPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  try {
+    const [members, posts, announce] = await Promise.all([
+      sb('users?select=id'),
+      sb('forum_posts?select=id'),
+      sb('announcements?select=id')
+    ]);
+    document.getElementById('statMembers').textContent = members.length||0;
+    document.getElementById('statPosts').textContent = posts.length||0;
+    document.getElementById('statAnnounce').textContent = announce.length||0;
+    /
+  // load 2 latest announcements
+    const ann = await sb('announcements?order=created_at.desc&limit=2&select=*');
+    const el = document.getElementById('dashAnnounce');
+    if(!ann||ann.length===0){el.innerHTML='<div class="empty">// belum ada pengumuman</div>';return;}
+    el.innerHTML=ann.map(a=>`<div class="card"><div class="card-title">${esc(a.title)}</div><div class="card-meta">${formatDate(a.created_at)}</div><div class="card-body">${esc(a.content)}</div></div>`).join('');
+  } catch(e){console.error(e);}
+}
+
 async function loadBiodata(){try{const res=await sb(`biodata?user_id=eq.${currentUser.id}&select=*`);if(res&&res.length>0){const b=res[0];document.getElementById('bioView').style.display='block';document.getElementById('bioForm').style.display='none';document.getElementById('bioAvatar').textContent=currentUser.username.charAt(0).toUpperCase();document.getElementById('bioViewName').textContent=b.full_name||currentUser.username;document.getElementById('bioViewAge').textContent=b.age?b.age+' tahun':'-';document.getElementById('bioViewCity').textContent=b.city||'-';document.getElementById('bioViewBio').textContent=b.bio||'-';document.getElementById('bioViewSocial').textContent=b.social_link||'-';document.getElementById('bioName').value=b.full_name||'';document.getElementById('bioAge').value=b.age||'';document.getElementById('bioCity').value=b.city||'';document.getElementById('bioBio').value=b.bio||'';document.getElementById('bioSocial').value=b.social_link||'';}else{document.getElementById('bioView').style.display='none';document.getElementById('bioForm').style.display='block';}}catch(e){}}
 function editBiodata(){document.getElementById('bioView').style.display='none';document.getElementById('bioForm').style.display='block';}
 async function saveBiodata(){const data={user_id:currentUser.id,full_name:document.getElementById('bioName').value.trim(),age:parseInt(document.getElementById('bioAge').value)||null,city:document.getElementById('bioCity').value.trim(),bio:document.getElementById('bioBio').value.trim(),social_link:document.getElementById('bioSocial').value.trim(),updated_at:new Date().toISOString()};if(!data.full_name)return toast('Nama lengkap wajib diisi',true);try{const check=await sb(`biodata?user_id=eq.${currentUser.id}&select=id`);if(check&&check.length>0){await fetch(`${SUPA_URL}/rest/v1/biodata?user_id=eq.${currentUser.id}`,{method:'PATCH',headers,body:JSON.stringify(data)});}else{await sb('biodata','POST',data);}toast('Biodata berhasil disimpan!');loadBiodata();loadMembers();}catch(e){toast('Gagal menyimpan biodata',true);}}
-async function loadForum(){const el=document.getElementById('forumList');try{const posts=await sb('forum_posts?order=created_at.desc&select=*');if(!posts||posts.length===0){el.innerHTML='<div class="empty">// belum ada post</div>';return;}const uids=[...new Set(posts.map(p=>p.user_id))];const users=await sb(`users?id=in.(${uids.join(',')})&select=id,username,role`);const umap={};users.forEach(u=>umap[u.id]=u);el.innerHTML=posts.map(p=>{const u=umap[p.user_id]||{username:'Unknown',role:'member'};const canDel=currentUser.role==='owner'||currentUser.role==='admin'||p.user_id===currentUser.id;return`<div class="card"><div class="card-title">${esc(p.title)}</div><div class="card-meta"><span class="card-badge badge-${u.role==='owner'?'owner':u.role==='admin'?'admin':u.role==='moderator'?'mod':'member'}">${u.role.toUpperCase()}</span>${esc(u.username)} · ${formatDate(p.created_at)}${canDel?`<button class="btn-danger" style="float:right;margin-top:-2px;" onclick="deletePost('${p.id}')">HAPUS</button>`:''}</div><div class="card-body">${esc(p.content)}</div>${p.media_url&&p.media_type==='image'?`<img src="${p.media_url}" class="media-preview" onclick="window.open('${p.media_url}','_blank')" style="cursor:pointer;">`:``}${p.media_url&&p.media_type==='video'?`<video src="${p.media_url}" class="media-preview-video" controls playsinline></video>`:``}</div>`;}).join('');}catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}}
+async function loadForum(){const el=document.getElementById('forumList');try{const posts=await sb('forum_posts?order=created_at.desc&select=*');if(!posts||posts.length===0){el.innerHTML='<div class="empty">// belum ada post</div>';return;}const uids=[...new Set(posts.map(p=>p.user_id))];const users=await sb(`users?id=in.(${uids.join(',')})&select=id,username,role`);const umap={};users.forEach(u=>umap[u.id]=u);el.innerHTML=posts.map(p=>{const u=umap[p.user_id]||{username:'Unknown',role:'member'};const canDel=currentUser.role==='owner'||currentUser.role==='ce-owner'||currentUser.role==='admin'||p.user_id===currentUser.id;return`<div class="card"><div class="card-title">${esc(p.title)}</div><div class="card-meta"><span class="card-badge badge-${u.role==='owner'?'owner':u.role==='ce-owner'?'ceowner':u.role==='admin'?'admin':u.role==='moderator'?'mod':u.role==='percobaan'?'percobaan':'member'}">${u.role.toUpperCase()}</span>${esc(u.username)} · ${formatDate(p.created_at)}${canDel?`<button class="btn-danger" style="float:right;margin-top:-2px;" onclick="deletePost('${p.id}')">HAPUS</button>`:''}</div><div class="card-body">${esc(p.content)}</div>${p.media_url&&p.media_type==='image'?`<img src="${p.media_url}" class="media-preview" onclick="window.open('${p.media_url}','_blank')" style="cursor:pointer;">`:``}${p.media_url&&p.media_type==='video'?`<video src="${p.media_url}" class="media-preview-video" controls playsinline></video>`:``}</div>`;}).join('');}catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}}
 function previewMedia(input){const file=input.files[0];if(!file)return;const thumb=document.getElementById('mediaThumb');const img=document.getElementById('mediaImgPreview');const vid=document.getElementById('mediaVidPreview');const url=URL.createObjectURL(file);thumb.style.display='block';document.getElementById('uploadArea').style.display='none';if(file.type.startsWith('image/')){img.src=url;img.style.display='block';vid.style.display='none';}else{vid.src=url;vid.style.display='block';img.style.display='none';}}
 function removeMedia(){document.getElementById('mediaFile').value='';document.getElementById('mediaThumb').style.display='none';document.getElementById('mediaImgPreview').style.display='none';document.getElementById('mediaVidPreview').style.display='none';document.getElementById('uploadArea').style.display='block';}
 async function uploadMedia(file){const ext=file.name.split('.').pop();const filename=`${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;const bar=document.getElementById('uploadProgress');const fill=document.getElementById('progressFill');bar.style.display='block';fill.style.width='30%';try{const res=await fetch(`${SUPA_URL}/storage/v1/object/media/${filename}`,{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':file.type},body:file});fill.style.width='100%';setTimeout(()=>{bar.style.display='none';fill.style.width='0%';},600);if(!res.ok)return null;return{url:`${SUPA_URL}/storage/v1/object/public/media/${filename}`,type:file.type.startsWith('image/')?'image':'video'};}catch(e){bar.style.display='none';return null;}}
 async function submitPost(){const title=document.getElementById('forumTitle').value.trim();const content=document.getElementById('forumContent').value.trim();if(!title||!content)return toast('Judul dan isi wajib diisi',true);const btn=document.getElementById('btnPost');btn.disabled=true;btn.textContent='MENGIRIM...';try{let media_url=null,media_type=null;const file=document.getElementById('mediaFile').files[0];if(file){const uploaded=await uploadMedia(file);if(uploaded){media_url=uploaded.url;media_type=uploaded.type;}}await sb('forum_posts','POST',{user_id:currentUser.id,title,content,media_url,media_type});document.getElementById('forumTitle').value='';document.getElementById('forumContent').value='';removeMedia();toast('Post berhasil dikirim!');loadForum();loadDashboard();}catch(e){toast('Gagal mengirim post',true);}btn.disabled=false;btn.textContent='KIRIM POST';}
 async function deletePost(id){if(!confirm('Hapus post ini?'))return;await fetch(`${SUPA_URL}/rest/v1/forum_posts?id=eq.${id}`,{method:'DELETE',headers});toast('Post dihapus');loadForum();loadDashboard();}
-async function loadMembers(){const el=document.getElementById('memberList');try{const users=await sb('users?select=id,username,role,created_at&order=created_at.asc');const bios=await sb('biodata?select=user_id,full_name,city');const bmap={};bios.forEach(b=>bmap[b.user_id]=b);if(!users||users.length===0){el.innerHTML='<div class="empty">// belum ada member</div>';return;}el.innerHTML=users.map(u=>{const b=bmap[u.id]||{};return`<div class="member-card"><div class="member-avatar">${u.username.charAt(0).toUpperCase()}</div><div class="member-info"><div class="member-name">${esc(u.username)}</div><div class="member-detail"><span class="card-badge badge-${u.role==='owner'?'owner':u.role==='admin'?'admin':u.role==='moderator'?'mod':'member'}">${u.role.toUpperCase()}</span>${b.city?esc(b.city):''}${b.full_name?' · '+esc(b.full_name):''}</div></div></div>`;}).join('');}catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}}
-async function loadAnnouncements(){const el=document.getElementById('announceList');try{const ann=await sb('announcements?order=created_at.desc&select=*');if(!ann||ann.length===0){el.innerHTML='<div class="empty">// belum ada pengumuman</div>';return;}el.innerHTML=ann.map(a=>{const canDel=['owner','admin','moderator'].includes(currentUser.role);return`<div class="card"><div class="card-title">${esc(a.title)}</div><div class="card-meta">${formatDate(a.created_at)}${canDel?`<button class="btn-danger" style="float:right;" onclick="deleteAnnounce('${a.id}')">HAPUS</button>`:''}</div><div class="card-body">${esc(a.content)}</div></div>`;}).join('');}catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}}
+async function loadMembers(){const el=document.getElementById('memberList');try{const users=await sb('users?select=id,username,role,face_photo,created_at&order=created_at.asc');const bios=await sb('biodata?select=user_id,full_name,city');const bmap={};bios.forEach(b=>bmap[b.user_id]=b);if(!users||users.length===0){el.innerHTML='<div class="empty">// belum ada member</div>';return;}el.innerHTML=users.map(u=>{const b=bmap[u.id]||{};return`<div class="member-card"><div class="member-avatar" style="${u.face_photo?'padding:0;overflow:hidden;':''}">${u.face_photo?`<img src="${u.face_photo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`:u.username.charAt(0).toUpperCase()}</div><div class="member-info"><div class="member-name">${esc(u.username)}</div><div class="member-detail"><span class="card-badge badge-${u.role==='owner'?'owner':u.role==='ce-owner'?'ceowner':u.role==='admin'?'admin':u.role==='moderator'?'mod':u.role==='percobaan'?'percobaan':'member'}">${u.role.toUpperCase()}</span>${b.city?esc(b.city):''}${b.full_name?' · '+esc(b.full_name):''}</div></div></div>`;}).join('');}catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}}
+async function loadAnnouncements(){const el=document.getElementById('announceList');try{const ann=await sb('announcements?order=created_at.desc&select=*');if(!ann||ann.length===0){el.innerHTML='<div class="empty">// belum ada pengumuman</div>';return;}el.innerHTML=ann.map(a=>{const canDel=['owner','ce-owner','admin','moderator'].includes(currentUser.role);return`<div class="card"><div class="card-title">${esc(a.title)}</div><div class="card-meta">${formatDate(a.created_at)}${canDel?`<button class="btn-danger" style="float:right;" onclick="deleteAnnounce('${a.id}')">HAPUS</button>`:''}</div><div class="card-body">${esc(a.content)}</div></div>`;}).join('');}catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}}
 async function submitAnnounce(){const title=document.getElementById('annTitle').value.trim();const content=document.getElementById('annContent').value.trim();if(!title||!content)return toast('Judul dan isi wajib diisi',true);try{await sb('announcements','POST',{title,content,created_by:currentUser.id});document.getElementById('annTitle').value='';document.getElementById('annContent').value='';toast('Pengumuman berhasil diposting!');loadAnnouncements();loadDashboard();}catch(e){toast('Gagal posting pengumuman',true);}}
 async function deleteAnnounce(id){if(!confirm('Hapus pengumuman ini?'))return;await fetch(`${SUPA_URL}/rest/v1/announcements?id=eq.${id}`,{method:'DELETE',headers});toast('Pengumuman dihapus');loadAnnouncements();loadDashboard();}
-async function loadAdminMembers(){const el=document.getElementById('adminMemberList');try{const users=await sb('users?select=id,username,role&order=created_at.asc');el.innerHTML=users.map(u=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--dark3);border-radius:8px;border:1px solid var(--border);"><span style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--white);flex:1;">${esc(u.username)}</span>${['owner','admin','moderator'].includes(currentUser.role)&&u.id!==currentUser.id?`${currentUser.role==='owner'?`<select onchange="changeRole('${u.id}',this.value)" style="background:var(--dark2);border:1px solid var(--border);color:var(--cyan);padding:5px 8px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:11px;"><option ${u.role==='member'?'selected':''} value="member">MEMBER</option><option ${u.role==='moderator'?'selected':''} value="moderator">MODERATOR</option><option ${u.role==='admin'?'selected':''} value="admin">ADMIN</option></select>`:''}${(currentUser.role==='owner'||(currentUser.role==='admin'&&u.role==='member')||(currentUser.role==='moderator'&&u.role==='member'))?`<button class="btn-danger" onclick="deleteUser('${u.id}','${u.username}')">KICK</button>`:''}` :`<span class="card-badge badge-${u.role==='owner'?'owner':u.role==='admin'?'admin':'mod'}">${u.role.toUpperCase()}</span>`}</div>`).join('');}catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}}
-async function changeRole(uid,role){await fetch(`${SUPA_URL}/rest/v1/users?id=eq.${uid}`,{method:'PATCH',headers,body:JSON.stringify({role})});toast('Role berhasil diubah!');loadMembers();loadAdminMembers();}
+async function loadAdminMembers(){const el=document.getElementById('adminMemberList');try{const users=await sb('users?select=id,username,role&order=created_at.asc');el.innerHTML=users.map(u=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--dark3);border-radius:8px;border:1px solid var(--border);"><span style="font-family:'Orbitron',sans-serif;font-size:13px;color:var(--white);flex:1;">${esc(u.username)}</span>${['owner','ce-owner','admin','moderator'].includes(currentUser.role)&&u.id!==currentUser.id?`${currentUser.role==='owner'||currentUser.role==='ce-owner'?`<select onchange="changeRole('${u.id}',this.value)" style="background:var(--dark2);border:1px solid var(--border);color:var(--cyan);padding:5px 8px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:11px;"><option ${u.role==='percobaan'?'selected':''} value="percobaan">PERCOBAAN</option><option ${u.role==='member'?'selected':''} value="member">MEMBER</option><option ${u.role==='moderator'?'selected':''} value="moderator">MODERATOR</option><option ${u.role==='admin'?'selected':''} value="admin">ADMIN</option><option ${u.role==='ce-owner'?'selected':''} value="ce-owner">CE-OWNER</option></select>`:''}${(currentUser.role==='owner'||currentUser.role==='ce-owner'||(currentUser.role==='admin'&&u.role==='member')||(currentUser.role==='moderator'&&u.role==='member'))?`<button class="btn-danger" onclick="deleteUser('${u.id}','${u.username}')">KICK</button>`:''}` :`<span class="card-badge badge-${u.role==='owner'?'owner':u.role==='ce-owner'?'ceowner':u.role==='admin'?'admin':u.role==='moderator'?'mod':u.role==='percobaan'?'percobaan':'member'}">${u.role.toUpperCase()}</span>`}</div>`).join('');}catch(e){el.innerHTML='<div class="empty">// gagal memuat</div>';}}
+async function changeRole(uid,role){await fetch(`${SUPA_URL}/rest/v1/users?id=eq.${uid}`,{method:'PATCH',headers,body:JSON.stringify({role})});toast('Role berhasil diubah!');if(uid===currentUser.id){currentUser.role=role;const badge=document.getElementById('navBadge');badge.textContent=role.toUpperCase();badge.className='nav-badge '+(role==='owner'?'owner':role==='ce-owner'?'ceowner':role==='admin'?'admin':role==='moderator'?'moderator':role==='percobaan'?'percobaan':'');document.getElementById('dashRole').innerHTML=`<span class="card-badge badge-${role==='owner'?'owner':role==='ce-owner'?'ceowner':role==='admin'?'admin':role==='moderator'?'mod':role==='percobaan'?'percobaan':'member'}">${role.toUpperCase()}</span>`;if(['owner','ce-owner','admin','moderator'].includes(role)){document.getElementById('adminPanel').style.display='block';document.getElementById('announceForm').style.display='block';}else{document.getElementById('adminPanel').style.display='none';document.getElementById('announceForm').style.display='none';}}loadMembers();loadAdminMembers();}
 async function deleteUser(uid,uname){if(!confirm(`Kick member "${uname}"?`))return;await fetch(`${SUPA_URL}/rest/v1/users?id=eq.${uid}`,{method:'DELETE',headers});toast(`${uname} telah di-kick`);loadAdminMembers();loadMembers();loadDashboard();}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function formatDate(d){if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});}
+async function refreshCurrentRole(){try{const res=await sb(`users?id=eq.${currentUser.id}&select=role`);if(res&&res.length>0&&res[0].role!==currentUser.role){currentUser.role=res[0].role;const role=currentUser.role;const badge=document.getElementById('navBadge');badge.textContent=role.toUpperCase();badge.className='nav-badge '+(role==='owner'?'owner':role==='ce-owner'?'ceowner':role==='admin'?'admin':role==='moderator'?'moderator':role==='percobaan'?'percobaan':'');document.getElementById('dashRole').innerHTML=`<span class="card-badge badge-${role==='owner'?'owner':role==='ce-owner'?'ceowner':role==='admin'?'admin':role==='moderator'?'mod':role==='percobaan'?'percobaan':'member'}">${role.toUpperCase()}</span>`;}}catch(e){}}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'){const lf=document.getElementById('loginForm');const rf=document.getElementById('registerForm');if(lf.style.display!=='none')doLogin();else if(rf.style.display!=='none')doRegister();}});
 </script>
 </body>
